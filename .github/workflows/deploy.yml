@@ -1,0 +1,59 @@
+name: Build and Deploy Quartz Site
+
+on:
+  push:
+    branches:
+      - v5  # Или main, если вы используете основную ветку
+  # Также можно добавить триггер по расписанию или вручную
+  workflow_dispatch:
+
+# Устанавливаем разрешения для деплоя на GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Клонируем репозиторий с Quartz (TDOC-HOST)
+      - name: Checkout Quartz repo
+        uses: actions/checkout@v4
+
+      # 2. Клонируем репозиторий с заметками (TDOC), используя секретный токен
+      - name: Checkout Content repo
+        uses: actions/checkout@v4
+        with:
+          repository: 'semsig13-tech/TDOC'  # Ваш репозиторий с заметками
+          path: 'content'                  # Клонируем заметки в папку 'content'
+          token: ${{ secrets.ACCESS_TOKEN }} # Используем токен для доступа к приватному репо
+
+      # 3. Устанавливаем Node.js
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # 4. Устанавливаем зависимости Quartz и собираем сайт
+      - name: Install Dependencies & Build
+        run: |
+          npm install
+          npx quartz build --directory ./content
+
+      # 5. Загружаем собранный сайт как артефакт для деплоя
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
