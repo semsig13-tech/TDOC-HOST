@@ -45,7 +45,7 @@ jobs:
         run: |
           npm install
           npx quartz build --directory ./content
-
+          touch ./public/.nojekyll
       # 6. Загружаем собранные файлы как артефакт для деплоя
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
