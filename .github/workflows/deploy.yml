@@ -26,7 +26,6 @@ jobs:
           path: 'content'
           token: ${{ secrets.ACCESS_TOKEN }}
 
-      # Отладочный шаг: выводим список файлов в content
       - name: List content directory
         run: |
           echo "Contents of ./content:"
@@ -43,24 +42,25 @@ jobs:
       - name: Update npm
         run: npm install -g npm@latest
 
-      - name: Install Dependencies & Build
-        run: |
-          npm install
-          npx quartz build --directory ./content
+      - name: Install Dependencies
+        run: npm install
 
-      # Отладочный шаг: проверяем, создалась ли папка public и есть ли index.html
+      - name: Build site
+        run: npx quartz build --directory ./content
+
       - name: Check public directory
         run: |
           if [ -d "./public" ]; then
             echo "public directory exists"
             ls -la ./public
             if [ -f "./public/index.html" ]; then
-              echo "index.html found!"
+              echo "✅ index.html found!"
             else
-              echo "index.html NOT found!"
+              echo "❌ index.html NOT found!"
             fi
           else
-            echo "public directory does NOT exist!"
+            echo "❌ public directory does NOT exist!"
+            exit 1   # Завершаем с ошибкой, чтобы workflow не продолжался
           fi
 
       - name: Upload artifact
