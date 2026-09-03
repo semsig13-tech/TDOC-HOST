@@ -3,8 +3,8 @@ name: Deploy Quartz site
 on:
   push:
     branches:
-      - main          # автоматический запуск при пуше в main
-  workflow_dispatch:  # ручной запуск через кнопку "Run workflow"
+      - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -28,7 +28,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22          # ✅ изменено с 20 на 22
           cache: npm
 
       - name: Install dependencies
