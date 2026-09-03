@@ -3,7 +3,8 @@ name: Deploy Quartz site
 on:
   push:
     branches:
-      - main  # или ваша основная ветка
+      - main          # автоматический запуск при пуше в main
+  workflow_dispatch:  # ручной запуск через кнопку "Run workflow"
 
 permissions:
   contents: read
@@ -27,7 +28,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
           cache: npm
 
       - name: Install dependencies
@@ -39,7 +40,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: public  # папка, куда Quartz собирает сайт
+          path: public
 
   deploy:
     needs: build
