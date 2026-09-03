@@ -3,11 +3,10 @@ name: Build and Deploy Quartz Site
 on:
   push:
     branches:
-      - v5  # Или main, если вы используете основную ветку
-  # Также можно добавить триггер по расписанию или вручную
-  workflow_dispatch:
+      - v5               # Запуск при пуше в ветку v5 (ваша основная ветка)
+  workflow_dispatch:      # Возможность запуска вручную через интерфейс GitHub
 
-# Устанавливаем разрешения для деплоя на GitHub Pages
+# Разрешения для деплоя на GitHub Pages
 permissions:
   contents: read
   pages: write
@@ -16,32 +15,38 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      # 1. Клонируем репозиторий с Quartz (TDOC-HOST)
+      # 1. Клонируем репозиторий с Quartz (движок)
       - name: Checkout Quartz repo
         uses: actions/checkout@v4
 
-      # 2. Клонируем репозиторий с заметками (TDOC), используя секретный токен
+      # 2. Клонируем репозиторий с заметками (контент)
       - name: Checkout Content repo
         uses: actions/checkout@v4
         with:
-          repository: 'semsig13-tech/TDOC'  # Ваш репозиторий с заметками
-          path: 'content'                  # Клонируем заметки в папку 'content'
-          token: ${{ secrets.ACCESS_TOKEN }} # Используем токен для доступа к приватному репо
+          repository: 'semsig13-tech/TDOC'   # Ваш репозиторий с заметками
+          path: 'content'                   # Папка, куда будут склонированы заметки
+          token: ${{ secrets.ACCESS_TOKEN }} # Токен для доступа к приватному репо
 
-      # 3. Устанавливаем Node.js
+      # 3. Устанавливаем Node.js версии 22 (требуется для Quartz 5.0.0)
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+          cache: 'npm'    # Кешируем зависимости для ускорения сборки
 
-      # 4. Устанавливаем зависимости Quartz и собираем сайт
+      # 4. Обновляем npm до последней версии (рекомендуется)
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      # 5. Устанавливаем зависимости и собираем сайт
       - name: Install Dependencies & Build
         run: |
           npm install
           npx quartz build --directory ./content
 
-      # 5. Загружаем собранный сайт как артефакт для деплоя
+      # 6. Загружаем собранные файлы как артефакт для деплоя
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -54,6 +59,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # 7. Деплой на GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
